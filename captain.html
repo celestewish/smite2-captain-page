@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SMITE 2 Draft — Captain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  color-scheme:dark;
+  --obsidian:#0e1410; --obsidian-2:#141c17; --obsidian-4:#111713;
+  --bone:#ede6d6; --bone-dim:#8a8271; --bone-dim-2:#6c6555;
+  --blood:#9e2b25; --blood-2:#c23b2e; --blood-soft:#d9736a;
+  --jade:#1f7a5c; --jade-2:#35b29b; --jade-3:#4ed9b4;
+  --gold:#d9a441; --gold-2:#f0c368; --gold-3:#ffdd8f;
+  --royal:#2b4c82; --royal-2:#7fa8e0;
+  --near-black:#241512;
+  --font-heading:"Roboto Slab",ui-serif,Georgia,serif;
+  --font-body:"Source Sans 3","Segoe UI",Inter,system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{ margin:0; font-family:var(--font-body); color:var(--bone); background:var(--obsidian); min-height:100vh; }
+.bg-gradient{ position:fixed; inset:0; z-index:0;
+  background:linear-gradient(120deg,#0E1410,#17241C,#1B2F26,#12200F,#241A0C,#0E1410,#122A33);
+  background-size:400% 400%; animation:gradFlow 26s ease-in-out infinite; }
+@keyframes gradFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 rgba(240,195,104,0)}50%{box-shadow:0 0 28px rgba(240,195,104,.55)}}
+@keyframes tileIn{0%{opacity:0;transform:translateY(10px) scale(.85)}60%{opacity:1;transform:translateY(-2px) scale(1.04)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes dotPulse{0%,80%,100%{opacity:.25;transform:scale(.85)}40%{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:translateY(0)}}
+
+.topbar{ position:relative; z-index:3; display:flex; align-items:center; gap:14px; padding:16px 28px; }
+.topbar-title{ display:flex; flex-direction:column; line-height:1.1; }
+.topbar-kicker{ font-size:10px; letter-spacing:.18em; color:var(--bone-dim); text-transform:uppercase; }
+.topbar-name{ font-family:var(--font-heading); font-weight:700; font-size:16px;
+  background:linear-gradient(90deg,#F0C368,#FFDD8F); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.claim-badge{ margin-left:auto; display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:6px 14px;
+  font-size:12px; font-weight:600; border:1px solid var(--gold); background:rgba(217,164,65,.14); color:var(--gold-2); }
+.claim-badge .dot{ width:7px; height:7px; border-radius:99px; }
+.hidden{ display:none !important; }
+.app{ position:relative; z-index:2; padding:0 24px 40px; max-width:960px; margin:0 auto; }
+
+.idle,.claim-screen{ min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:6px; animation:fadeUp .6s ease-out; }
+.brand-title{ font-family:var(--font-heading); font-weight:700; font-size:30px; letter-spacing:.03em; margin:0;
+  background:linear-gradient(90deg,#F0C368,#FFDD8F,#F0C368); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.brand-sub{ color:var(--bone-dim); font-size:15px; margin:6px 0 20px; }
+.dots{ display:flex; gap:8px; }
+.dots span{ width:9px; height:9px; border-radius:99px; background:var(--gold); animation:dotPulse 1.4s ease-in-out infinite; }
+.dots span:nth-child(2){ animation-delay:.18s; } .dots span:nth-child(3){ animation-delay:.36s; }
+
+.claim-buttons{ display:flex; gap:18px; margin-top:22px; flex-wrap:wrap; justify-content:center; }
+.claim-btn{ width:200px; padding:20px 18px; border-radius:14px; cursor:pointer; display:flex; flex-direction:column; gap:6px;
+  align-items:center; font-family:var(--font-body); background:var(--obsidian-2); transition:transform .15s ease, box-shadow .15s ease; border:2px solid var(--gold); }
+.claim-btn:not(:disabled):hover{ transform:translateY(-3px); }
+.claim-btn:disabled{ cursor:not-allowed; opacity:.5; }
+.claim-btn.side-a{ border-color:var(--blood-soft); }
+.claim-btn.side-b{ border-color:var(--royal-2); }
+.claim-side-label{ font-family:var(--font-heading); font-weight:700; font-size:18px; letter-spacing:.03em; }
+.claim-btn.side-a .claim-side-label{ color:var(--blood-soft); }
+.claim-btn.side-b .claim-side-label{ color:var(--royal-2); }
+.claim-side-state{ font-size:12px; color:var(--bone-dim); }
+.claim-hint{ margin-top:22px; font-size:12px; color:var(--bone-dim-2); max-width:340px; }
+
+.status-row{ display:flex; align-items:center; justify-content:center; gap:14px; padding:10px 0 6px; flex-wrap:wrap; }
+.status-pill{ font-family:var(--font-heading); font-size:18px; letter-spacing:.03em; text-transform:uppercase; color:var(--gold-2); }
+.timer-pill{ display:inline-flex; align-items:center; gap:7px; border:1px solid var(--jade); border-radius:999px; padding:4px 14px; background:var(--obsidian); }
+.timer-pill .dot{ width:7px; height:7px; border-radius:99px; background:var(--jade); }
+.timer-pill.urgent{ border-color:var(--blood); animation:pulseGlow .6s ease-in-out infinite; }
+.timer-pill.urgent .dot{ background:var(--blood-soft); }
+.timer-pill b{ font-size:13px; color:var(--bone-dim); }
+.timer-pill.urgent b{ color:var(--blood-soft); }
+
+.turn-banner{ display:flex; justify-content:center; padding:14px 0 4px; gap:8px; }
+.turn-pill{ border:1px solid var(--gold); border-radius:999px; padding:7px 18px; font-size:12px; font-weight:700;
+  color:var(--gold-2); background:rgba(217,164,65,.14); animation:pulseGlow 2.2s ease-in-out infinite; }
+
+.columns{ display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; margin-top:10px; }
+@media (max-width:640px){ .columns{ grid-template-columns:1fr; } }
+.team-col{ border-radius:14px; background:var(--obsidian-2); padding:18px; border-top:3px solid var(--bone); border-bottom:3px solid var(--gold); transition:box-shadow .3s ease; }
+.team-col.side-a{ border-right:3px solid var(--blood-2); }
+.team-col.side-b{ border-right:3px solid var(--royal); }
+.team-logo{ display:block; width:32px; height:32px; margin:0 auto 6px; border-radius:6px; object-fit:cover; }
+.claim-btn .team-logo{ width:40px; height:40px; }
+.team-name{ text-align:center; font-family:var(--font-heading); font-size:15px; letter-spacing:.03em; text-transform:uppercase; margin:0 0 12px; }
+.team-col.side-a .team-name{ color:var(--blood-soft); }
+.team-col.side-b .team-name{ color:var(--royal-2); }
+.team-col.active{ box-shadow:0 0 0 2px var(--gold), 0 0 30px rgba(217,164,65,.25); }
+.tile-row{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:10px; }
+.section-label{ text-align:center; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--bone-dim-2); margin:12px 0 8px; }
+.tile{ display:flex; flex-direction:column; align-items:center; gap:4px; width:64px; }
+.tile-in{ animation:tileIn .5s ease-out; }
+.tile-portrait{ width:56px; height:56px; border-radius:9px; overflow:hidden; background:var(--obsidian-4); border:1px solid #3a3226; display:flex; align-items:center; justify-content:center; }
+.tile-portrait img{ width:100%; height:100%; object-fit:cover; }
+.tile-name{ font-size:10px; color:var(--bone); text-align:center; max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tile-ban .tile-portrait{ opacity:.5; filter:saturate(.2); border-color:#5b3a38; }
+.tile-ban .tile-name{ color:var(--bone-dim); text-decoration:line-through; }
+.tile-empty{ color:var(--bone-dim-2); font-size:12px; text-align:center; width:100%; }
+
+.picker{ margin-top:22px; border-radius:14px; background:var(--obsidian-2); padding:18px; border:1px solid #2c3a31; }
+.picker-row{ display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.picker-search{ flex:1; min-width:160px; border-radius:8px; border:1px solid #2c3a31; background:var(--obsidian); color:var(--bone); padding:9px 12px; font-size:13px; }
+.role-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.role-chip{ border-radius:999px; border:1px solid #2c3a31; background:var(--obsidian); color:var(--bone-dim); font-size:11px; padding:5px 12px; cursor:pointer; }
+.role-chip.active{ border-color:var(--gold); background:rgba(217,164,65,.18); color:var(--gold-2); }
+.picker-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(62px,1fr)); gap:8px; }
+.picker-god{ position:relative; aspect-ratio:1; border-radius:9px; overflow:hidden; border:1px solid #2c3a31; background:var(--obsidian-4); cursor:pointer; padding:0; }
+.picker-god img{ width:100%; height:100%; object-fit:cover; }
+.picker-god:hover{ box-shadow:0 0 0 2px var(--jade-2); }
+.picker-god-locked{ cursor:not-allowed; opacity:.35; filter:grayscale(1); }
+.picker-god-badge{ position:absolute; inset-inline:0; bottom:0; padding:2px 0; background:rgba(14,20,16,.9); font-size:8px; text-align:center; color:var(--bone-dim); }
+.picker-waiting{ text-align:center; padding:26px 0; color:var(--bone-dim); font-size:13px; }
+.picker-ready{ display:flex; justify-content:center; padding:16px 0; }
+.ready-btn{ font-family:var(--font-heading); font-weight:700; letter-spacing:.03em; text-transform:uppercase; border:none;
+  border-radius:10px; padding:14px 34px; font-size:14px; cursor:pointer; background:linear-gradient(180deg,#FFDD8F,#D9A441); color:#241708; }
+.ready-btn:disabled{ opacity:.5; cursor:not-allowed; }
+.ready-btn.done{ background:var(--obsidian-4); color:var(--jade-3); }
+
+.recap{ animation:fadeUp .8s ease-out; text-align:center; padding-top:14px; }
+.recap-title{ font-family:var(--font-heading); font-weight:700; font-size:28px; margin:0 0 4px; color:var(--gold-2); }
+.recap-sub{ color:var(--bone-dim); font-size:13px; margin-bottom:22px; }
+.recap-columns{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media (max-width:640px){ .recap-columns{ grid-template-columns:1fr; } }
+.recap-col{ border-radius:14px; padding:18px; background:var(--obsidian-2); border-top:3px solid var(--bone); border-bottom:3px solid var(--gold); }
+.recap-col.side-a{ border-right:3px solid var(--blood-2); }
+.recap-col.side-b{ border-right:3px solid var(--royal); }
+
+.toast{ position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:20; background:var(--obsidian-2);
+  border:1px solid var(--blood); color:var(--blood-soft); padding:10px 18px; border-radius:10px; font-size:13px; max-width:min(90vw,420px); text-align:center; }
+</style>
+</head>
+<body>
+  <div class="bg-gradient" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-kicker">SMITE 2</span>
+      <span class="topbar-name">Draft — Captain</span>
+    </div>
+    <div class="claim-badge hidden" id="claimBadge"></div>
+  </header>
+  <main class="app" id="app"></main>
+  <div class="toast hidden" id="toast"></div>
+
+<script>
+  // Static page, no server-side templating: this repo is deployed once to
+  // GitHub Pages and never touched again per-match. Supabase credentials are
+  // baked in as defaults (the same public, RLS-scoped anon key the desktop
+  // app ships with — safe to expose, same as any client-side Supabase app)
+  // and can be overridden via `su`/`sk` query params for a moderator who has
+  // configured a self-hosted endpoint override in Settings → Advanced. See
+  // `cloud_captain_url` in the main app's `src-tauri/src/commands.rs`, which
+  // always supplies `su`/`sk` explicitly so this page never has to guess.
+  const DEFAULT_SUPABASE_URL = "https://xsnqfrojrcvmphxdnuub.supabase.co";
+  const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzbnFmcm9qcmN2bXBoeGRudXViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjUzMjcsImV4cCI6MjEwMDM0MTMyN30.gY60y3q3Sh7EF8VN5pYCV8bojO1Pauh_ic4XDd3hLV4";
+  const params = new URLSearchParams(location.search);
+  const SUPABASE_URL = params.get("su") || DEFAULT_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = params.get("sk") || DEFAULT_SUPABASE_ANON_KEY;
+  const CODE = params.get("code") || "";
+  const STORAGE_KEY = "smite2-cloud-captain-" + CODE;
+  const $ = (id) => document.getElementById(id);
+  const appEl = $("app");
+
+  let GODS = new Map();
+  let session = null;       // { match_id, team_a_name, team_a_logo_url, team_b_name, team_b_logo_url, live_snapshot, claims }
+  let lastSnapshot = null;
+  let myClaim = null;       // { side, token }
+  let revealIndex = -1;
+  let toastTimer = null;
+  const pickerState = { search: "", role: "" };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+  function avatarBg(role) {
+    switch (role) {
+      case "Guardian": return "#35b29b";
+      case "Mage": return "#2b4c82";
+      case "Hunter": return "#d9a441";
+      case "Warrior": return "#c9bfa8";
+      default: return "#354a3f";
+    }
+  }
+  function teamName(side) {
+    if (!session) return side === "b" ? "Order" : "Chaos";
+    return (side === "b" ? session.team_b_name : session.team_a_name) || (side === "b" ? "Order" : "Chaos");
+  }
+  function teamLogo(side) {
+    const url = session && (side === "b" ? session.team_b_logo_url : session.team_a_logo_url);
+    return url ? '<img class="team-logo" src="' + esc(url) + '" alt="" />' : "";
+  }
+  function showToast(msg) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.add("hidden"), 3200);
+  }
+  function tilePortrait(godId) {
+    const g = GODS.get(godId);
+    const name = g ? g.name : (godId || "—");
+    const bg = g ? avatarBg(g.role) : "#354a3f";
+    const letter = esc(name.slice(-1));
+    if (g && g.image_remote_url) {
+      return '<img src="' + esc(g.image_remote_url) + '" alt="" onerror="this.style.display=\'none\'" />';
+    }
+    return '<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:var(--font-heading);font-weight:700;color:var(--obsidian);background:' + bg + '">' + letter + '</span>';
+  }
+  function godTile(godId, kind, isNew) {
+    const g = GODS.get(godId);
+    const name = g ? g.name : (godId ? godId : "skipped");
+    const cls = "tile" + (kind === "ban" ? " tile-ban" : "") + (isNew ? " tile-in" : "");
+    return '<div class="' + cls + '"><div class="tile-portrait">' + (godId ? tilePortrait(godId) : "") + '</div><span class="tile-name">' + esc(name) + '</span></div>';
+  }
+  function bucket(actions, side, kind) {
+    const out = [];
+    actions.forEach((a, idx) => { if (a.side === side && a.action === kind) out.push({ god_id: a.god_id, idx: idx }); });
+    return out;
+  }
+
+  function updateClaimBadge() {
+    const el = $("claimBadge");
+    if (!el) return;
+    if (!myClaim) { el.classList.add("hidden"); return; }
+    const color = myClaim.side === "b" ? "var(--royal-2)" : "var(--blood-soft)";
+    el.classList.remove("hidden");
+    el.innerHTML = '<span class="dot" style="background:' + color + '"></span> Drafting for ' + esc(teamName(myClaim.side));
+  }
+
+  function renderIdle() {
+    appEl.innerHTML =
+      '<div class="idle"><h1 class="brand-title">SMITE 2 DRAFT</h1>' +
+      '<p class="brand-sub">' + (CODE ? "Connecting…" : "Missing captain code.") + '</p>' +
+      (CODE ? '<div class="dots"><span></span><span></span><span></span></div>' : '') + '</div>';
+  }
+
+  function renderInvalid() {
+    appEl.innerHTML =
+      '<div class="idle"><h1 class="brand-title">Invalid captain link</h1>' +
+      '<p class="brand-sub">Ask the moderator for a current captain link.</p></div>';
+  }
+
+  function renderClaimScreen() {
+    const aClaimed = session.claims.a, bClaimed = session.claims.b;
+    appEl.innerHTML =
+      '<div class="claim-screen">' +
+        '<h1 class="brand-title">SMITE 2 DRAFT</h1>' +
+        '<p class="brand-sub">Choose the side you’re drafting for</p>' +
+        '<div class="claim-buttons">' +
+          '<button class="claim-btn side-b" id="claimB"' + (bClaimed ? " disabled" : "") + '>' +
+            teamLogo("b") +
+            '<span class="claim-side-label">' + esc(teamName("b")) + '</span>' +
+            '<span class="claim-side-state">' + (bClaimed ? "Already claimed" : "Tap to claim") + '</span>' +
+          '</button>' +
+          '<button class="claim-btn side-a" id="claimA"' + (aClaimed ? " disabled" : "") + '>' +
+            teamLogo("a") +
+            '<span class="claim-side-label">' + esc(teamName("a")) + '</span>' +
+            '<span class="claim-side-state">' + (aClaimed ? "Already claimed" : "Tap to claim") + '</span>' +
+          '</button>' +
+        '</div>' +
+        '<p class="claim-hint">Only your team should use this link. Once you claim a side you’ll draft live for that team.</p>' +
+      '</div>';
+    const bBtn = $("claimB"), aBtn = $("claimA");
+    if (bBtn) bBtn.addEventListener("click", () => doClaim("b"));
+    if (aBtn) aBtn.addEventListener("click", () => doClaim("a"));
+  }
+
+  function readyStatusHtml(snap) {
+    return '<div class="turn-banner">' +
+      '<span class="turn-pill" style="' + (snap.ready_b ? "" : "opacity:.55") + '">' + (snap.ready_b ? "✓" : "…") + ' ' + esc(teamName("b")) + '</span>' +
+      '<span class="turn-pill" style="' + (snap.ready_a ? "" : "opacity:.55") + '">' + (snap.ready_a ? "✓" : "…") + ' ' + esc(teamName("a")) + '</span>' +
+    '</div>';
+  }
+
+  function teamColumnHtml(side, picks, bans, activeSide, revealAt) {
+    const activeCls = activeSide === side ? " active" : "";
+    const picksHtml = picks.length ? picks.map((p) => godTile(p.god_id, "pick", p.idx === revealAt)).join("") : '<div class="tile-empty">—</div>';
+    const bansHtml = bans.length ? bans.map((b) => godTile(b.god_id, "ban", b.idx === revealAt)).join("") : '<div class="tile-empty">—</div>';
+    return '<div class="team-col side-' + side + activeCls + '">' +
+      teamLogo(side) +
+      '<h3 class="team-name">' + esc(teamName(side)) + '</h3>' +
+      '<div class="tile-row">' + picksHtml + '</div>' +
+      '<div class="section-label">Bans</div>' +
+      '<div class="tile-row">' + bansHtml + '</div>' +
+    '</div>';
+  }
+
+  function pickerHtml(snap, currentStep) {
+    if (snap.status === "awaiting_ready") {
+      if (!myClaim) return "";
+      const mySideReady = myClaim.side === "a" ? snap.ready_a : snap.ready_b;
+      return '<div class="picker"><div class="picker-ready">' +
+        '<button class="ready-btn' + (mySideReady ? " done" : "") + '" id="readyBtn"' + (mySideReady ? " disabled" : "") + '>' +
+        (mySideReady ? "✓ Ready" : "Ready Up") + '</button></div></div>';
+    }
+    if (snap.status !== "in_progress" || !currentStep) return "";
+    if (!myClaim || currentStep.side !== myClaim.side) {
+      return '<div class="picker"><div class="picker-waiting">Waiting for ' + esc(teamName(currentStep.side)) + ' to ' + esc(currentStep.action) + '…</div></div>';
+    }
+    const used = new Set(snap.actions.map((a) => a.god_id).filter(Boolean));
+    const pool = snap.pool || { available: [], excluded: [], fearless_locked: [] };
+    const display = pool.available.filter((id) => !pool.excluded.includes(id) && !used.has(id));
+    const roles = Array.from(new Set(display.map((id) => GODS.get(id) && GODS.get(id).role).filter(Boolean))).sort();
+    const rolesHtml = roles.length
+      ? '<div class="role-chips" id="roleChips"><button class="role-chip active" data-role="">All</button>' +
+        roles.map((r) => '<button class="role-chip" data-role="' + esc(r) + '">' + esc(r) + '</button>').join("") + '</div>'
+      : "";
+    const gridHtml = display.map((id) => {
+      const g = GODS.get(id);
+      const locked = pool.fearless_locked.includes(id);
+      const name = g ? g.name : id;
+      return '<button class="picker-god' + (locked ? " picker-god-locked" : "") + '" data-god="' + esc(id) +
+        '" data-name="' + esc(name) + '" data-role="' + esc(g && g.role ? g.role : "") + '"' + (locked ? " disabled" : "") +
+        ' title="' + esc(locked ? name + " — already played earlier this series (Fearless)" : name) + '">' +
+        tilePortrait(id) + (locked ? '<span class="picker-god-badge">Played</span>' : "") + '</button>';
+    }).join("");
+    return '<div class="picker">' +
+      '<div class="picker-row"><input class="picker-search" id="pickerSearch" placeholder="Search gods…" /></div>' +
+      rolesHtml + '<div class="picker-grid" id="pickerGrid">' + gridHtml + '</div></div>';
+  }
+
+  function filterGrid() {
+    const grid = $("pickerGrid");
+    if (!grid) return;
+    const q = pickerState.search.trim().toLowerCase();
+    grid.querySelectorAll(".picker-god").forEach((btn) => {
+      const matchesSearch = (btn.dataset.name || "").toLowerCase().includes(q);
+      const matchesRole = !pickerState.role || btn.dataset.role === pickerState.role;
+      btn.style.display = (matchesSearch && matchesRole) ? "" : "none";
+    });
+  }
+
+  function wireBoardInteractions() {
+    const search = $("pickerSearch");
+    if (search) {
+      search.value = pickerState.search;
+      search.addEventListener("input", (e) => { pickerState.search = e.target.value; filterGrid(); });
+    }
+    const chips = $("roleChips");
+    if (chips) {
+      chips.addEventListener("click", (e) => {
+        const btn = e.target.closest(".role-chip");
+        if (!btn) return;
+        pickerState.role = btn.dataset.role || "";
+        chips.querySelectorAll(".role-chip").forEach((c) => c.classList.toggle("active", c === btn));
+        filterGrid();
+      });
+    }
+    const grid = $("pickerGrid");
+    if (grid) {
+      grid.addEventListener("click", (e) => {
+        const btn = e.target.closest(".picker-god");
+        if (!btn || btn.disabled) return;
+        submitAction("commit", btn.dataset.god);
+      });
+      filterGrid();
+    }
+    const readyBtn = $("readyBtn");
+    if (readyBtn) readyBtn.addEventListener("click", () => submitAction("ready", null));
+  }
+
+  function renderBoard(snap) {
+    const usedReveal = revealIndex;
+    revealIndex = -1;
+    const seq = (snap.template && snap.template.sequence) || [];
+    const currentStep = seq[snap.actions.length];
+    const total = currentStep
+      ? (currentStep.action === "pick" ? (snap.template.pick_timer_seconds || 0) : (snap.template.ban_timer_seconds || 0))
+      : 0;
+    const showTimer = (snap.status === "in_progress" || snap.status === "paused") && total > 0;
+    const statusLabel = snap.status === "complete" ? "Draft Complete"
+      : snap.status === "paused" ? "Paused"
+      : snap.status === "awaiting_ready" ? "Awaiting Ready"
+      : currentStep ? (esc(teamName(currentStep.side)) + " to " + currentStep.action) : "";
+    const picksB = bucket(snap.actions, "b", "pick"), bansB = bucket(snap.actions, "b", "ban");
+    const picksA = bucket(snap.actions, "a", "pick"), bansA = bucket(snap.actions, "a", "ban");
+    const activeSide = (snap.status === "in_progress" && currentStep) ? currentStep.side : null;
+
+    appEl.innerHTML =
+      '<div class="board" id="board">' +
+        '<div class="status-row"><span class="status-pill">' + statusLabel + '</span>' +
+          (showTimer ? '<span class="timer-pill" id="timerPill"><span class="dot"></span><b id="timerText">—</b></span>' : "") +
+        '</div>' +
+        (snap.status === "in_progress" && currentStep
+          ? '<div class="turn-banner"><span class="turn-pill">▲ ' + esc(teamName(currentStep.side)) + ' is drafting</span></div>'
+          : snap.status === "awaiting_ready" ? readyStatusHtml(snap) : "") +
+        '<div class="columns">' + teamColumnHtml("b", picksB, bansB, activeSide, usedReveal) + teamColumnHtml("a", picksA, bansA, activeSide, usedReveal) + '</div>' +
+        pickerHtml(snap, currentStep) +
+      '</div>';
+    wireBoardInteractions();
+    updateTimer();
+  }
+
+  function recapColumnHtml(side, picks, bans) {
+    const picksHtml = picks.length ? picks.map((p) => godTile(p.god_id, "pick", false)).join("") : '<div class="tile-empty">—</div>';
+    const bansHtml = bans.length ? bans.map((b) => godTile(b.god_id, "ban", false)).join("") : '<div class="tile-empty">—</div>';
+    return '<div class="recap-col side-' + side + '">' + teamLogo(side) + '<h3 class="team-name">' + esc(teamName(side)) + '</h3>' +
+      '<div class="tile-row">' + picksHtml + '</div><div class="section-label">Bans</div><div class="tile-row">' + bansHtml + '</div></div>';
+  }
+
+  function renderRecap(snap) {
+    const picksB = bucket(snap.actions, "b", "pick"), bansB = bucket(snap.actions, "b", "ban");
+    const picksA = bucket(snap.actions, "a", "pick"), bansA = bucket(snap.actions, "a", "ban");
+    appEl.innerHTML =
+      '<div class="recap"><h1 class="recap-title">Draft Complete</h1>' +
+      '<p class="recap-sub">' + esc((snap.template && snap.template.name) || "") + '</p>' +
+      '<div class="recap-columns">' + recapColumnHtml("b", picksB, bansB) + recapColumnHtml("a", picksA, bansA) + '</div></div>';
+  }
+
+  function renderApp() {
+    updateClaimBadge();
+    if (!CODE) { renderIdle(); return; }
+    if (!session) { renderIdle(); return; }
+    if (!myClaim) { renderClaimScreen(); return; }
+    if (!lastSnapshot) { renderIdle(); return; }
+    if (lastSnapshot.status === "complete") { renderRecap(lastSnapshot); return; }
+    renderBoard(lastSnapshot);
+  }
+
+  function updateTimer() {
+    if (!lastSnapshot) return;
+    const snap = lastSnapshot;
+    const seq = (snap.template && snap.template.sequence) || [];
+    const currentStep = seq[snap.actions.length];
+    const total = currentStep
+      ? (currentStep.action === "pick" ? (snap.template.pick_timer_seconds || 0) : (snap.template.ban_timer_seconds || 0))
+      : 0;
+    const showTimer = (snap.status === "in_progress" || snap.status === "paused") && total > 0;
+    if (!showTimer) return;
+    const remaining = Math.max(0, Math.round((snap.phase_deadline_ms - Date.now()) / 1000));
+    const urgent = remaining <= 5 && remaining > 0 && snap.status === "in_progress";
+    const timerText = $("timerText"), timerPill = $("timerPill");
+    if (timerText) timerText.textContent = remaining + "s";
+    if (timerPill) timerPill.classList.toggle("urgent", urgent);
+  }
+  setInterval(updateTimer, 500);
+
+  async function rpc(name, body) {
+    const res = await fetch(SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/rpc/" + name, {
+      method: "POST",
+      headers: { "content-type": "application/json", apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error((data && (data.message || data.error)) || ("request failed: " + res.status));
+    return data;
+  }
+
+  async function refreshGods() {
+    try {
+      const res = await fetch(SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/gods?select=id,name,role,image_remote_url", {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY },
+      });
+      const list = await res.json();
+      if (Array.isArray(list)) GODS = new Map(list.map((g) => [g.id, g]));
+    } catch (e) { /* keep the last-known catalog */ }
+  }
+
+  async function pollSession() {
+    if (!CODE) return;
+    try {
+      const data = await rpc("get_cloud_draft", { p_share_code: CODE });
+      if (!data) { session = null; renderInvalid(); return; }
+      session = data;
+      const priorCount = lastSnapshot ? lastSnapshot.actions.length : 0;
+      const snap = data.live_snapshot;
+      if (snap && snap.actions && snap.actions.length > priorCount) revealIndex = snap.actions.length - 1;
+      lastSnapshot = snap || null;
+      renderApp();
+    } catch (e) {
+      // Transient network hiccup: keep showing the last-known state.
+    }
+  }
+
+  async function doClaim(side) {
+    try {
+      const token = await rpc("claim_cloud_captain_side", { p_share_code: CODE, p_side: side });
+      myClaim = { side: side, token: token };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(myClaim));
+      renderApp();
+    } catch (e) {
+      showToast(e.message || "Could not claim that side.");
+      await pollSession();
+    }
+  }
+
+  async function submitAction(kind, godId) {
+    if (!myClaim) return;
+    try {
+      await rpc("submit_cloud_captain_action", { p_share_code: CODE, p_token: myClaim.token, p_kind: kind, p_god_id: godId || null });
+    } catch (e) {
+      showToast(e.message || "That action was rejected.");
+    }
+  }
+
+  (function init() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (stored && stored.side && stored.token) myClaim = stored;
+    } catch (e) { /* corrupt storage — fall through to the claim screen */ }
+    renderApp();
+    refreshGods();
+    pollSession();
+    setInterval(pollSession, 1500);
+    setInterval(() => { if (lastSnapshot) refreshGods(); }, 30000);
+  })();
+</script>
+</body>
+</html>
