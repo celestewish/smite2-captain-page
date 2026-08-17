@@ -457,10 +457,23 @@ body{ margin:0; font-family:var(--font-body); color:var(--bone); background:var(
     } catch (e) { /* keep the last-known catalog */ }
   }
 
+  let lastPolledJson = "";
+
   async function pollSession() {
     if (!CODE) return;
     try {
       const data = await rpc("get_cloud_draft", { p_share_code: CODE });
+      // Every render function below does a full appEl.innerHTML replace, which
+      // restarts CSS entrance animations and loses any transient state — fine
+      // for an actual change, but every poll tick was doing this unconditionally
+      // every 1.5s even when nothing changed, which reads as constant flicker
+      // (most visible on the idle/claim screens, since those change least).
+      // Skip the render entirely when this tick's response is byte-identical to
+      // the last one.
+      const json = JSON.stringify(data);
+      if (json === lastPolledJson) return;
+      lastPolledJson = json;
+
       if (!data) { session = null; renderInvalid(); return; }
       session = data;
       const priorCount = lastSnapshot ? lastSnapshot.actions.length : 0;
